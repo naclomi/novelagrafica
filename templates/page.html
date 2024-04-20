@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}} - Page {{id}}</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="/js/main.js"></script>
+</head>
+<body>
+  <main>
+  <div id="page-tray">
+    <img id="page-image" class="responsive" src="/assets/art/p{{ id }}.png">
+  </div>
+
+  <div id="nav-tray">
+    {% if first.id != id %}
+    <span><a href="{{ first['url-slug'] }}"><img src="/assets/first.png"></a></span>
+    {% endif %}
+    {% if prev is not none %}
+    <span><a href="{{ prev['url-slug'] }}" id="prev-link"><img src="/assets/prev.png"></a></span>
+    {% endif %}
+    <span>{{ id }}</span>
+    {% if next is not none %}
+    <span><a href="{{ next['url-slug'] }}" id="next-link"><img src="/assets/next.png"></a></span>
+    {% endif %}
+    {% if last.id != id %}
+    <span><a href="{{ last['url-slug'] }}"><img src="/assets/last.png"></a></span>
+    {% endif %}
+  </div>
+
+  </main>
+  <footer>
+  </footer>
+</body>
+</html>

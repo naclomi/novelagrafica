@@ -1,0 +1,49 @@
+@-ms-viewport{
+  width: device-width;
+}
+
+body {
+  background-color: #000;  
+  color: #ddd;
+  font-family: sans-serif;
+  line-height: 1.5;
+  margin: 0;
+}
+
+a {
+  color: #00e;
+  text-decoration: none;
+}
+
+main {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+#page-tray {
+  display: block;
+  width: 60rem;
+  max-width: 90vw;
+  margin: 3em;
+}
+
+#page-image {
+  width: 100%;
+}
+
+#nav-tray {
+  display: flex;
+  align-items: center;
+}
+
+#nav-tray img {
+  width: 6vw;
+}
+/*@media (min-aspect-ratio: 4/2) {
+  #page-image {
+    width: auto;
+    height: 200vh;
+  }
+}
+*/
