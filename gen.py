@@ -6,6 +6,7 @@ import copy
 import os
 import shutil
 import time
+import traceback
 import datetime
 
 def generate(book):
@@ -27,6 +28,7 @@ def generate(book):
         for template_name in pattern_env.list_templates():
             if template_name not in book["pages"][idx]:
                 page_vars[-1][template_name] = pattern_env.get_template(template_name).render(**page_vars[idx])
+        page_vars[-1]["page"] = page_vars[-1]
 
     for idx in range(len(book["pages"])):
         page_vars[idx]["first"] = page_vars[0]
@@ -87,10 +89,13 @@ def main():
                         regenerate = True
 
             if regenerate:
-                with open(sys.argv[1], "r") as f:
-                    book = yaml.safe_load(f)
-                    generate(book)
-                    print("\r[{:}] Regenerated book contents".format(datetime.datetime.now().strftime('%I:%M:%S %p')))
+                try:
+                    with open(sys.argv[1], "r") as f:
+                        book = yaml.safe_load(f)
+                        generate(book)
+                        print("\r[{:}] Regenerated book contents".format(datetime.datetime.now().strftime('%I:%M:%S %p')))
+                except (jinja2.exceptions.TemplateError, yaml.parser.ParserError) as e:
+                    traceback.print_exc()
     except KeyboardInterrupt:
         pass
 
