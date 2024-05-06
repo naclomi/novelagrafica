@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-import jinja2
-import yaml
-import sys
+import argparse
 import copy
+import datetime
 import os
 import re
 import shutil
+import sys
 import time
 import traceback
-import datetime
+
+import jinja2
+import yaml
 
 def deep_sub(old, new, data):
     if isinstance(data, dict):
@@ -26,13 +28,13 @@ def deep_sub(old, new, data):
     else:
         pass
 
-def generate(book):
+def generate(book, templates_dir, skeleton_dir, output_dir):
     env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader('templates/'),
+        loader=jinja2.FileSystemLoader(templates_dir),
         autoescape=jinja2.select_autoescape()
     )
 
-    shutil.copytree("skeleton", "output", dirs_exist_ok=True)
+    shutil.copytree(skeleton_dir, output_dir, dirs_exist_ok=True)
 
     pattern_env = jinja2.Environment(
         loader=jinja2.DictLoader(book["patterns"])
@@ -80,7 +82,7 @@ def generate(book):
     for idx in range(len(book["pages"])):
         template = env.get_template(page_vars[idx]["template"])
         rendered = template.render(**page_vars[idx])
-        with open(os.path.join("output", page_vars[idx]["filename"]), "w") as of:
+        with open(os.path.join(output_dir, page_vars[idx]["filename"]), "w") as of:
             of.write(rendered)
 
 
@@ -93,10 +95,17 @@ def new_spinner():
 
 
 def main():
+    sw_base = os.path.dirname(os.path.realpath(__file__))
+    parser = argparse.ArgumentParser(prog='novelagrafica')
+    parser.add_argument('book_yaml')
+    parser.add_argument('-o', '--output-dir', default="./output")
+    parser.add_argument('--templates-dir', default=os.path.join(sw_base, "templates"))
+    parser.add_argument('--skeleton-dir', default=os.path.join(sw_base, "skeleton"))
+
+    args = parser.parse_args()
+
     timestamps = {}
-    base_dir = "."
-    watch_dir = base_dir
-    output_dir = os.path.join(base_dir, "output")
+    watch_dir = "."
 
     spinner = new_spinner()
     try:
@@ -112,7 +121,7 @@ def main():
                 directory[1].clear()
                 for subdir in subdirs:
                     full_subdir = os.path.join(directory[0], subdir)
-                    if not os.path.samefile(full_subdir, output_dir):
+                    if not os.path.samefile(full_subdir, args.output_dir):
                         directory[1].append(subdir)
                 for filename in directory[2]:
                     full_path = os.path.join(directory[0], filename)
@@ -124,9 +133,9 @@ def main():
 
             if regenerate:
                 try:
-                    with open(sys.argv[1], "r") as f:
+                    with open(args.book_yaml, "r") as f:
                         book = yaml.safe_load(f)
-                        generate(book)
+                        generate(book, args.templates_dir, args.skeleton_dir, args.output_dir)
                         print("\r[{:}] Regenerated book contents".format(datetime.datetime.now().strftime('%I:%M:%S %p')))
                 except (jinja2.exceptions.TemplateError, yaml.parser.ParserError) as e:
                     traceback.print_exc()
