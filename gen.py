@@ -28,13 +28,15 @@ def deep_sub(old, new, data):
     else:
         pass
 
-def generate(book, templates_dir, skeleton_dir, output_dir):
+def generate(book, templates_dir, skeleton_dir, output_dir, assets_dir):
     env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(templates_dir),
         autoescape=jinja2.select_autoescape()
     )
 
     shutil.copytree(skeleton_dir, output_dir, dirs_exist_ok=True)
+    if os.path.isdir(assets_dir):
+        shutil.copytree(assets_dir, os.path.join(output_dir, "assets"), dirs_exist_ok=True)
 
     pattern_env = jinja2.Environment(
         loader=jinja2.DictLoader(book["patterns"])
@@ -101,8 +103,12 @@ def main():
     parser.add_argument('-o', '--output-dir', default="./output")
     parser.add_argument('--templates-dir', default=os.path.join(sw_base, "templates"))
     parser.add_argument('--skeleton-dir', default=os.path.join(sw_base, "skeleton"))
+    parser.add_argument('--assets-dir', default="./assets")
+    parser.add_argument('--watch', action="store_true")
 
     args = parser.parse_args()
+
+    os.makedirs(args.output_dir, exist_ok=True)
 
     timestamps = {}
     watch_dir = "."
@@ -110,9 +116,10 @@ def main():
     spinner = new_spinner()
     try:
         while True:
-            time.sleep(.1)
-            sys.stdout.write("  watching " + next(spinner) + " \r")
-            sys.stdout.flush()
+            if args.watch:
+                time.sleep(.1)
+                sys.stdout.write("  watching " + next(spinner) + " \r")
+                sys.stdout.flush()
 
             regenerate = False
             # TODO: handle file removals
@@ -135,10 +142,13 @@ def main():
                 try:
                     with open(args.book_yaml, "r") as f:
                         book = yaml.safe_load(f)
-                        generate(book, args.templates_dir, args.skeleton_dir, args.output_dir)
+                        generate(book, args.templates_dir, args.skeleton_dir, args.output_dir, args.assets_dir)
                         print("\r[{:}] Regenerated book contents".format(datetime.datetime.now().strftime('%I:%M:%S %p')))
                 except (jinja2.exceptions.TemplateError, yaml.parser.ParserError) as e:
                     traceback.print_exc()
+
+            if not args.watch:
+                break
     except KeyboardInterrupt:
         pass
 
