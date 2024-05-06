@@ -1,0 +1,21 @@
+patterns:
+    filename: "page.{{id}}.html"
+    url-slug: "/page/{{id}}"
+    image-url: "p{{ id }}.png"
+base:
+    title: Comic Title
+    template: page.html
+    coda: |
+        <i>Comic Title</i> by Author Name<br>
+        Originally published Publication Year
+    links:
+        Home: "home url here"
+        "Buy a paper copy": "store url here"
+        Contact: "contact url here"
+pages:
+    - id: cover
+      image-url: "cover.png"
+    - range: $x:1..10
+      id: $x
+    - id: end
+      image-url: "cover.png"

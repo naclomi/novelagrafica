@@ -4,10 +4,27 @@ import yaml
 import sys
 import copy
 import os
+import re
 import shutil
 import time
 import traceback
 import datetime
+
+def deep_sub(old, new, data):
+    if isinstance(data, dict):
+        for k, v in data.items():
+            if isinstance(v, str):
+                data[k] = v.replace(old, new)
+            else:
+                deep_sub(old, new, v)
+    elif isinstance(data, list):
+        for idx in range(len(data)):
+            if isinstance(data[idx], str):
+                data[idx] = data[idx].replace(old, new)
+            else:
+                deep_sub(old, new, data[idx])
+    else:
+        pass
 
 def generate(book):
     env = jinja2.Environment(
@@ -21,6 +38,23 @@ def generate(book):
         loader=jinja2.DictLoader(book["patterns"])
     )
 
+    expanded_pages = []
+    for idx in range(len(book["pages"])):
+        if "range" in book["pages"][idx]:
+            range_exp = re.sub("\s", "", book["pages"][idx]["range"])
+            range_exp_tokens = re.match("([^:]+):([0-9]+)..([0-9]+)", range_exp)
+            var_name = range_exp_tokens.group(1)
+            range_start = int(range_exp_tokens.group(2))
+            range_end = int(range_exp_tokens.group(3))
+            for rep_idx in range(range_start, range_end+1):
+                new_page = copy.deepcopy(book["pages"][idx])
+                del new_page["range"]
+                deep_sub(var_name, str(rep_idx), new_page)
+                expanded_pages.append(new_page)
+        else:
+            expanded_pages.append(book["pages"][idx])
+    book["pages"] = expanded_pages
+
     page_vars = []
     for idx in range(len(book["pages"])):
         page_vars.append(copy.deepcopy(book["base"]))
@@ -29,6 +63,7 @@ def generate(book):
             if template_name not in book["pages"][idx]:
                 page_vars[-1][template_name] = pattern_env.get_template(template_name).render(**page_vars[idx])
         page_vars[-1]["page"] = page_vars[-1]
+        page_vars[-1]["all_pages"] = page_vars
 
     for idx in range(len(book["pages"])):
         page_vars[idx]["first"] = page_vars[0]
@@ -55,7 +90,6 @@ def new_spinner():
     while True:
         yield chars[i]
         i = i + 1 if i < len(chars) - 1 else 0
-
 
 
 def main():
