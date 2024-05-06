@@ -111,7 +111,7 @@ def main():
     os.makedirs(args.output_dir, exist_ok=True)
 
     timestamps = {}
-    watch_dir = "."
+    watches = [args.templates_dir, args.skeleton_dir, args.assets_dir, args.book_yaml]
 
     spinner = new_spinner()
     try:
@@ -121,22 +121,32 @@ def main():
                 sys.stdout.write("  watching " + next(spinner) + " \r")
                 sys.stdout.flush()
 
-            regenerate = False
-            # TODO: handle file removals
-            for directory in os.walk(watch_dir, topdown=True):
-                subdirs = directory[1][:]
-                directory[1].clear()
-                for subdir in subdirs:
-                    full_subdir = os.path.join(directory[0], subdir)
-                    if not os.path.samefile(full_subdir, args.output_dir):
-                        directory[1].append(subdir)
-                for filename in directory[2]:
-                    full_path = os.path.join(directory[0], filename)
-                    old_last_modified = timestamps.get(full_path, 0)
-                    new_last_modified = os.path.getmtime(full_path)
-                    if new_last_modified > old_last_modified:
-                        timestamps[full_path] = new_last_modified
-                        regenerate = True
+                regenerate = False
+                # TODO: handle file removals
+                for watch in watches:
+                    if os.path.isfile(watch):
+                        old_last_modified = timestamps.get(watch, 0)
+                        new_last_modified = os.path.getmtime(watch)
+                        if new_last_modified > old_last_modified:
+                            timestamps[watch] = new_last_modified
+                            regenerate = True
+                    else:
+                        for directory in os.walk(watch, topdown=True):
+                            subdirs = directory[1][:]
+                            directory[1].clear()
+                            for subdir in subdirs:
+                                full_subdir = os.path.join(directory[0], subdir)
+                                if not os.path.samefile(full_subdir, args.output_dir):
+                                    directory[1].append(subdir)
+                            for filename in directory[2]:
+                                full_path = os.path.join(directory[0], filename)
+                                old_last_modified = timestamps.get(full_path, 0)
+                                new_last_modified = os.path.getmtime(full_path)
+                                if new_last_modified > old_last_modified:
+                                    timestamps[full_path] = new_last_modified
+                                    regenerate = True
+            else:
+                regenerate = True
 
             if regenerate:
                 try:
