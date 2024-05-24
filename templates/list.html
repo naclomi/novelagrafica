@@ -7,16 +7,16 @@
   <link rel="stylesheet" href="/css/main.css">
   <script src="/js/main.js"></script>
 </head>
-<body>
+<body class="{{ page['body-class'] }}">
   <main>
     <div class="page-list">
-      <h3>{{title}}</h3>
-      <ul>
+      <span>{{title}}</span>
+      <ol>
         {% for page in all_pages %}
           <li><a href="{{ page['url-slug'] }}" class="text-button">&#x2768;{{ page['page-title'] }}&#x2769;</a></li>
         {% endfor %}
 
-      </ul>
+      </ol>
     </div>
     <div class="colophon-tray">
       <span>

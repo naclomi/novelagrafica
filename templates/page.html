@@ -10,7 +10,7 @@
 <body class="{{ page['body-class'] }}">
   <main>
     <div id="page-tray">
-      <img id="page-image" class="responsive" src="{{ page['image-url'] }}">
+      <img id="page-image" class="responsive {{ 'shadow' if page['page-shadow'] }}" src="{{ page['image-url'] }}">
     </div>
 
     <div class="nav-tray">

@@ -43,6 +43,9 @@ main {
   width: 100%;
   max-width: 800px;
 }
+#page-image.shadow {
+  box-shadow: 0px 0px 20px 0px #bbbbbb;
+}
 
 .nav-tray {
   display: flex;
@@ -122,16 +125,22 @@ main {
 }
 
 .light .text-button:hover {
-  color: #ccc;
+  color: #FFF;
   background-color: #333;
 }
 
 .page-list {
   font-size: 2em;
+  font-family: serif;
   text-align: center;
 }
-.page-list ul {
+.page-list ol {
   list-style-type: none;
   padding: 0;
   margin: 0;
+}
+
+
+.page-list > span{
+  font-size: 1.5em;
 }
