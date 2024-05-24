@@ -87,6 +87,23 @@ def generate(book, templates_dir, skeleton_dir, output_dir, assets_dir):
         with open(os.path.join(output_dir, page_vars[idx]["filename"]), "w") as of:
             of.write(rendered)
 
+    for single_vars in book["singles"]:
+        single_vars_base = copy.deepcopy(book["base"])
+        single_vars_base.update(single_vars)
+        single_vars = single_vars_base
+
+        for template_name in pattern_env.list_templates():
+            if template_name not in single_vars:
+                single_vars[template_name] = pattern_env.get_template(template_name).render(**single_vars)
+
+        single_vars["page"] = single_vars
+        single_vars["all_pages"] = page_vars
+
+        template = env.get_template(single_vars["template"])
+        rendered = template.render(**single_vars)
+        with open(os.path.join(output_dir, single_vars["filename"]), "w") as of:
+            of.write(rendered)
+
 
 def new_spinner():
     chars = "|/-\\|/-\\"
@@ -94,7 +111,6 @@ def new_spinner():
     while True:
         yield chars[i]
         i = i + 1 if i < len(chars) - 1 else 0
-
 
 def main():
     sw_base = os.path.dirname(os.path.realpath(__file__))
@@ -114,6 +130,7 @@ def main():
     watches = [args.templates_dir, args.skeleton_dir, args.assets_dir, args.book_yaml]
 
     spinner = new_spinner()
+
     try:
         while True:
             if args.watch:

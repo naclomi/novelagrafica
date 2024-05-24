@@ -10,6 +10,11 @@ body {
   padding: 1.5em;
 }
 
+.light {
+  background-color: #fff;
+  color: #333;
+}
+
 a {
   color: #00e;
   text-decoration: none;
@@ -61,10 +66,18 @@ main {
   text-decoration: none;
   font-size: 4em;
 }
+.light .unicode-button {
+  color: #333;
+}
 
 .unicode-button:hover {
   color: #fff;
 }
+.light .unicode-button:hover {
+  color: #000;
+}
+
+
 
 #page-number {
   font-family: serif;
@@ -83,6 +96,11 @@ main {
   align-items: center;
 }
 
+.light .colophon-tray {
+  border-top-color: #333;
+}
+
+
 .colophon-tray span {
   margin: 1em;
 }
@@ -90,9 +108,30 @@ main {
 .text-button {
   text-decoration: none;
   color: #ccc;
+  background-color: transparent;
+  border-radius: 0.5em;
+}
+
+.light .text-button {
+  color: #333;
 }
 
 .text-button:hover {
-  color: #fff;
+  color: #333;
+  background-color: #ccc;
 }
 
+.light .text-button:hover {
+  color: #ccc;
+  background-color: #333;
+}
+
+.page-list {
+  font-size: 2em;
+  text-align: center;
+}
+.page-list ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
