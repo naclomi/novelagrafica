@@ -13,21 +13,55 @@ import jinja2
 import jsonmerge
 import yaml
 
-def deep_sub(old, new, data):
-    if isinstance(data, dict):
-        for k, v in data.items():
-            if isinstance(v, str):
-                data[k] = v.replace(old, new)
-            else:
-                deep_sub(old, new, v)
-    elif isinstance(data, list):
-        for idx in range(len(data)):
-            if isinstance(data[idx], str):
-                data[idx] = data[idx].replace(old, new)
-            else:
-                deep_sub(old, new, data[idx])
+
+def obj_walk_keys(node, callback, path=".", visited=None):
+    if visited is None:
+        visited = set()
+    if id(node) in visited:
+        return
     else:
-        pass
+        visited.add(id(node))
+    if isinstance(node, dict):
+        for k, v in list(node.items()):
+            next_path = path + ".{:}".format(k)
+            callback(node, k, v, next_path)
+            obj_walk_keys(v, callback, next_path, visited)
+    elif isinstance(node, list):
+        for idx, elem in enumerate(node):
+            obj_walk_keys(elem, callback, path + "[{:}]".format(idx), visited)
+
+
+def evaluate_inline_templates(obj):
+    deepest_level = 0
+    def find_max_level(node, k, v, path):
+        nonlocal deepest_level
+        deepest_level = max(deepest_level, k.count("?"))
+    obj_walk_keys(obj, find_max_level)
+
+    for level in range(1,deepest_level+1):
+        patterns = {}
+
+        suffix = "?" * level
+        suffix_re = re.compile(r"^[^?]*\?{"+str(level)+r"}$")
+        def scrape_patterns(node, k, v, path):
+            if suffix_re.match(k) and isinstance(v, str):
+                patterns[path] = v
+        obj_walk_keys(obj, scrape_patterns)
+
+        pattern_env = jinja2.Environment(
+            loader=jinja2.DictLoader(patterns)
+        )
+
+        def replace_patterns(node, k, v, path):        
+            if path in patterns:
+                evaluated_k = k[:-len(suffix)]
+                del node[k]
+                if evaluated_k not in node:
+                    node[evaluated_k] = pattern_env.get_template(path).render(**node)
+                else:
+                    pass
+        obj_walk_keys(obj, replace_patterns)
+
 
 def generate(book, templates_dir, skeleton_dir, output_dir, assets_dir):
     env = jinja2.Environment(
@@ -38,10 +72,6 @@ def generate(book, templates_dir, skeleton_dir, output_dir, assets_dir):
     shutil.copytree(skeleton_dir, output_dir, dirs_exist_ok=True)
     if os.path.isdir(assets_dir):
         shutil.copytree(assets_dir, os.path.join(output_dir, "assets"), dirs_exist_ok=True)
-
-    pattern_env = jinja2.Environment(
-        loader=jinja2.DictLoader(book["patterns"])
-    )
 
     expanded_pages = []
     for idx in range(len(book["pages"])):
@@ -54,7 +84,7 @@ def generate(book, templates_dir, skeleton_dir, output_dir, assets_dir):
             for rep_idx in range(range_start, range_end+1):
                 new_page = copy.deepcopy(book["pages"][idx])
                 del new_page["range"]
-                deep_sub(var_name, str(rep_idx), new_page)
+                new_page[var_name] = str(rep_idx)
                 expanded_pages.append(new_page)
         else:
             expanded_pages.append(book["pages"][idx])
@@ -66,9 +96,6 @@ def generate(book, templates_dir, skeleton_dir, output_dir, assets_dir):
         page_vars[-1].update(book["pages"][idx])
         page_vars[-1]["page"] = page_vars[-1]
         page_vars[-1]["all_pages"] = page_vars
-        for template_name in pattern_env.list_templates():
-            if template_name not in book["pages"][idx]:
-                page_vars[-1][template_name] = pattern_env.get_template(template_name).render(**page_vars[idx])
 
     for idx in range(len(book["pages"])):
         page_vars[idx]["first"] = page_vars[0]
@@ -82,6 +109,8 @@ def generate(book, templates_dir, skeleton_dir, output_dir, assets_dir):
         else:
             page_vars[idx]["next"] = None
 
+    evaluate_inline_templates(page_vars)
+
     for idx in range(len(book["pages"])):
         template = env.get_template(page_vars[idx]["template"])
         rendered = template.render(**page_vars[idx])
@@ -94,9 +123,7 @@ def generate(book, templates_dir, skeleton_dir, output_dir, assets_dir):
         single_vars = single_vars_base
         single_vars["page"] = single_vars
         single_vars["all_pages"] = page_vars
-        for template_name in pattern_env.list_templates():
-            if template_name not in single_vars:
-                single_vars[template_name] = pattern_env.get_template(template_name).render(**single_vars)
+        evaluate_inline_templates(single_vars)
 
         template = env.get_template(single_vars["template"])
         rendered = template.render(**single_vars)
@@ -166,7 +193,6 @@ def main():
                 regenerate = True
 
             if regenerate:
-                # TODO use jsonmerge.merge to start with base book.yml
                 try:
                     with open(args.default_book_yaml, "r") as f:
                         default_book = yaml.safe_load(f)

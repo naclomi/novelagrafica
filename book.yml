@@ -1,24 +1,20 @@
-patterns:
-    filename: "page.{{id}}.html"
-    url-slug: "{{ page['site-root'] }}/page/{{id}}"
-    page-title: "Page {{id}}"
-    image-url: "{{ page['site-root'] }}/assets/p{{ id }}.png"
 base:
+    filename??: "page.{{id}}.html"
+    url-slug??: "page/{{id}}"
+    page-title??: "Page {{id}}"
+    image-url??: "{{ page['site-root'] }}/assets/p{{ id }}.png"
     title: Comic Title
     template: page.html
     site-root: http://127.0.0.1:8080
     coda: |
         <i>Comic Title</i> by Author Name<br>
         Originally published Publication Year
-    links:
-        Home: "home url here"
-        "Buy a paper copy": "store url here"
-        Contact: "contact url here"
+    links: {}
 pages:
     - id: cover
       image-url: "cover.png"
-    - range: $x:1..10
-      id: $x
+    - range: x:1..10
+      id?: "{{x}}"
     - id: end
       image-url: "cover.png"
 singles:
