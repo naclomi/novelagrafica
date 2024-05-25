@@ -15,15 +15,15 @@
 
     <div class="nav-tray">
       {% if prev is not none %}
-      <span><a href="{{ page['site-root'] }}{{ first['url-slug'] }}" class="unicode-button" title="First page">&#x27dd;</a></span>
-      <span><a href="{{ page['site-root'] }}{{ prev['url-slug'] }}" class="unicode-button" id="prev-link" title="Previous page">&#x276E;</a></span>
+      <span><a href="{{ page['site-root'] }}{{ first['url-slug'] }}" class="unicode-button" title="First page" aria-label="First page">&#x27dd;</a></span>
+      <span><a href="{{ page['site-root'] }}{{ prev['url-slug'] }}" class="unicode-button" id="prev-link" title="Previous page" aria-label="Previous page">&#x276E;</a></span>
       {% else %}
       <span style="width: 8em"></span>
       {% endif %}
       <span id="page-number">{{ id }}</span>
       {% if next is not none %}
-      <span><a href="{{ page['site-root'] }}{{ next['url-slug'] }}" class="unicode-button" id="next-link" title="Next page">&#x276F;</a></span>
-      <span><a href="{{ page['site-root'] }}{{ last['url-slug'] }}" class="unicode-button" title="Last page">&#x27de;</a></span>
+      <span><a href="{{ page['site-root'] }}{{ next['url-slug'] }}" class="unicode-button" id="next-link" title="Next page" aria-label="Next page">&#x276F;</a></span>
+      <span><a href="{{ page['site-root'] }}{{ last['url-slug'] }}" class="unicode-button" title="Last page" aria-label="Last page">&#x27de;</a></span>
       {% else %}
       <span style="width: 8em"></span>
       {% endif %}

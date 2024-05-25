@@ -10,6 +10,7 @@ import time
 import traceback
 
 import jinja2
+import jsonmerge
 import yaml
 
 def deep_sub(old, new, data):
@@ -63,11 +64,11 @@ def generate(book, templates_dir, skeleton_dir, output_dir, assets_dir):
     for idx in range(len(book["pages"])):
         page_vars.append(copy.deepcopy(book["base"]))
         page_vars[-1].update(book["pages"][idx])
+        page_vars[-1]["page"] = page_vars[-1]
+        page_vars[-1]["all_pages"] = page_vars
         for template_name in pattern_env.list_templates():
             if template_name not in book["pages"][idx]:
                 page_vars[-1][template_name] = pattern_env.get_template(template_name).render(**page_vars[idx])
-        page_vars[-1]["page"] = page_vars[-1]
-        page_vars[-1]["all_pages"] = page_vars
 
     for idx in range(len(book["pages"])):
         page_vars[idx]["first"] = page_vars[0]
@@ -91,13 +92,11 @@ def generate(book, templates_dir, skeleton_dir, output_dir, assets_dir):
         single_vars_base = copy.deepcopy(book["base"])
         single_vars_base.update(single_vars)
         single_vars = single_vars_base
-
+        single_vars["page"] = single_vars
+        single_vars["all_pages"] = page_vars
         for template_name in pattern_env.list_templates():
             if template_name not in single_vars:
                 single_vars[template_name] = pattern_env.get_template(template_name).render(**single_vars)
-
-        single_vars["page"] = single_vars
-        single_vars["all_pages"] = page_vars
 
         template = env.get_template(single_vars["template"])
         rendered = template.render(**single_vars)
@@ -119,6 +118,7 @@ def main():
     parser.add_argument('-o', '--output-dir', default="./output")
     parser.add_argument('--templates-dir', default=os.path.join(sw_base, "templates"))
     parser.add_argument('--skeleton-dir', default=os.path.join(sw_base, "skeleton"))
+    parser.add_argument('--default-book-yaml', default=os.path.join(sw_base, "book.yml"))
     parser.add_argument('--assets-dir', default="./assets")
     parser.add_argument('--watch', action="store_true")
 
@@ -166,11 +166,14 @@ def main():
                 regenerate = True
 
             if regenerate:
+                # TODO use jsonmerge.merge to start with base book.yml
                 try:
+                    with open(args.default_book_yaml, "r") as f:
+                        default_book = yaml.safe_load(f)
                     with open(args.book_yaml, "r") as f:
-                        book = yaml.safe_load(f)
-                        generate(book, args.templates_dir, args.skeleton_dir, args.output_dir, args.assets_dir)
-                        print("\r[{:}] Regenerated book contents".format(datetime.datetime.now().strftime('%I:%M:%S %p')))
+                        book = jsonmerge.merge(default_book, yaml.safe_load(f))
+                    generate(book, args.templates_dir, args.skeleton_dir, args.output_dir, args.assets_dir)
+                    print("\r[{:}] Regenerated book contents".format(datetime.datetime.now().strftime('%I:%M:%S %p')))
                 except (jinja2.exceptions.TemplateError, yaml.parser.ParserError) as e:
                     traceback.print_exc()
 

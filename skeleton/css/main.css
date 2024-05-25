@@ -53,7 +53,7 @@ main {
   align-items: center;
   width: 75vw;
   max-width: 25em;
-  font-size: 2vw;
+  font-size: 1.25vw;
 
 }
 @media (min-width: 1024px) {

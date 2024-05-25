@@ -1,8 +1,8 @@
 patterns:
     filename: "page.{{id}}.html"
-    url-slug: "/page/{{id}}"
+    url-slug: "{{ page['site-root'] }}/page/{{id}}"
     page-title: "Page {{id}}"
-    image-url: "p{{ id }}.png"
+    image-url: "{{ page['site-root'] }}/assets/p{{ id }}.png"
 base:
     title: Comic Title
     template: page.html

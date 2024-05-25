@@ -1,5 +1,7 @@
+Options -Indexes 
+
 RewriteEngine On
 RewriteRule ^page/([^/]*)$ /page.$1.html [L]
 RewriteRule ^.+\.html$ - [L]
-RewriteRule ^([^/]+)$ /$1.html [L]
+RewriteRule ^([^/.]+)$ /$1.html [L]
 RewriteRule ^$ /page.cover.html [L]
