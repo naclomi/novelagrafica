@@ -196,8 +196,15 @@ def main():
                 try:
                     with open(args.default_book_yaml, "r") as f:
                         default_book = yaml.safe_load(f)
+                    try:
+                        schema_filename = os.path.splitext(args.default_book_yaml)
+                        schema_filename = ".".join((schema_filename[0], "schema", schema_filename[1][1:]))
+                        with open(schema_filename, "r") as f:
+                            default_book_schema = yaml.safe_load(f)
+                    except FileNotFoundError:
+                        default_book_schema = {}
                     with open(args.book_yaml, "r") as f:
-                        book = jsonmerge.merge(default_book, yaml.safe_load(f))
+                        book = jsonmerge.Merger(default_book_schema).merge(default_book, yaml.safe_load(f))
                     generate(book, args.templates_dir, args.skeleton_dir, args.output_dir, args.assets_dir)
                     print("\r[{:}] Regenerated book contents".format(datetime.datetime.now().strftime('%I:%M:%S %p')))
                 except (jinja2.exceptions.TemplateError, yaml.parser.ParserError) as e:

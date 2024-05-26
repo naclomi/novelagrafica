@@ -39,11 +39,11 @@ main {
   }
 }
 */
-#page-image {
+.page-image {
   width: 100%;
   max-width: 800px;
 }
-#page-image.shadow {
+.page-image.shadow {
   box-shadow: 0px 0px 20px 0px #bbbbbb;
 }
 

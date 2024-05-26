@@ -20,4 +20,13 @@ pages:
 singles:
     - id: page-list
       filename: page-list.html
-      template: list.html
+      template: single.html
+      content?: |
+        <div class="page-list">
+        <span>{{title}}</span>
+        <ol>
+            {% for page in all_pages %}
+                <li><a href="{{ page['url-slug'] }}" class="text-button">&#x2768;{{ page['page-title'] }}&#x2769;</a></li>
+            {% endfor %}
+        </ol>
+        </div>
