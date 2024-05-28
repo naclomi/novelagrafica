@@ -16,13 +16,13 @@
     <div class="nav-tray">
       {% if prev is not none %}
       <span><a href="{{ page['site-root'] }}/{{ first['url-slug'] }}" class="unicode-button" title="First page" aria-label="First page">&#x27dd;</a></span>
-      <span><a href="{{ page['site-root'] }}/{{ prev['url-slug'] }}" class="unicode-button" id="prev-link" title="Previous page" aria-label="Previous page">&#x276E;</a></span>
+      <span><a href="{{ page['site-root'] }}/{{ prev['url-slug'] }}" class="unicode-button" id="prev-link" title="Previous page" aria-label="Previous page">&#x21fd;</a></span>
       {% else %}
       <span style="width: 8em"></span>
       {% endif %}
       <span id="page-number">{{ id }}</span>
       {% if next is not none %}
-      <span><a href="{{ page['site-root'] }}/{{ next['url-slug'] }}" class="unicode-button" id="next-link" title="Next page" aria-label="Next page">&#x276F;</a></span>
+      <span><a href="{{ page['site-root'] }}/{{ next['url-slug'] }}" class="unicode-button" id="next-link" title="Next page" aria-label="Next page">&#x21fe;</a></span>
       <span><a href="{{ page['site-root'] }}/{{ last['url-slug'] }}" class="unicode-button" title="Last page" aria-label="Last page">&#x27de;</a></span>
       {% else %}
       <span style="width: 8em"></span>
@@ -35,6 +35,9 @@
       {% for link_name in links %}
         <a href="{{ links[link_name] }}" class="text-button">&#x2768;{{ link_name }}&#x2769;</a>
       {% endfor %}
+      <span class="license">
+        {{ license|safe }}
+      </span>
     </div>
   </main>
 </body>

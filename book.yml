@@ -1,32 +1,36 @@
 base:
-    filename??: "page.{{id}}.html"
-    url-slug??: "page/{{id}}"
+    filename??: "{{sequence_name}}.{{id}}.html"
+    url-slug??: "{{sequence_name}}.{{id}}.html"
     page-title??: "Page {{id}}"
-    image-url??: "{{ page['site-root'] }}/assets/p{{ id }}.png"
+    image-url??: "{{ page['site-root'] }}/assets/{{sequence_name}}.{{ id }}.png"
     title: Comic Title
     template: page.html
     site-root: http://127.0.0.1:8080
     coda: |
         <i>Comic Title</i> by Author Name<br>
         Originally published Publication Year
-    links: {}
+    links: {
+        
+    }
 pages:
-    - id: cover
-      image-url: "cover.png"
-    - range: x:1..10
-      id?: "{{x}}"
-    - id: end
-      image-url: "cover.png"
-singles:
-    - id: page-list
-      filename: page-list.html
-      template: single.html
-      content?: |
-        <div class="page-list">
-        <span>{{title}}</span>
-        <ol>
-            {% for page in all_pages %}
-                <li><a href="{{ page['url-slug'] }}" class="text-button">&#x2768;{{ page['page-title'] }}&#x2769;</a></li>
-            {% endfor %}
-        </ol>
-        </div>
+    story:
+        - id: cover
+          image-url: "cover.png"
+          filename: index.html
+        - range: x:1..10
+          id?: "{{x}}"
+        - id: end
+          image-url: "back-cover.png"
+    singles:
+        - id: page-list
+          filename: page-list.html
+          template: single.html
+          content?: |
+            <div class="page-list">
+            <span>{{title}}</span>
+            <ol>
+                {% for page in sequences["story"] %}
+                    <li><a href="{{ page['url-slug'] }}" class="text-button">&#x2768;{{ page['page-title'] }}&#x2769;</a></li>
+                {% endfor %}
+            </ol>
+            </div>

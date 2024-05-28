@@ -1,5 +1,5 @@
 {
-    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$schema": "http://json-schema.org/draft-07/schema#",
     "$ref": "#/definitions/Root",
     "definitions": {
         "Root": {
@@ -12,33 +12,30 @@
                     "required": []
                 },
                 "pages": {
-                    "type": "array",
-                    "mergeStrategy": "overwrite",
-                    "items": {
-                        "$ref": "#/definitions/Page"
-                    }
-                },
-                "singles": {
-                    "type": "array",
-                    "mergeStrategy": "append",
-                    "items": {
-                        "$ref": "#/definitions/Single"
+                    "type": "object",
+                    "mergeStrategy": "objectMerge",
+                    "properties": {
+                        "singles": {
+                            "type": "array",
+                            "mergeStrategy": "append",
+                            "items": { "$ref": "#/definitions/Page" }
+                        }
+                    },
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": { "$ref": "#/definitions/Page" },
+                        "mergeStrategy": "overwrite"
                     }
                 }
             },
             "required": [
                 "base",
-                "pages",
-                "singles"
-            ],
+                "pages"
+            ]
         },
         "Page": {
             "type": "object",
-            "required": [],
-        },
-        "Single": {
-            "type": "object",
-            "required": [],
+            "required": []
         }
     }
 }

@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=12.0, minimum-scale=.25, user-scalable=yes">
   <title>{{title}} [{{id}}]</title>
-  <link rel="stylesheet" href="/css/main.css">
-  <script src="/js/main.js"></script>
+  <link rel="stylesheet" href="{{ page['site-root'] }}/css/main.css">
+  <script src="{{ page['site-root'] }}/js/main.js"></script>
 </head>
 <body class="{{ page['body-class'] }}">
   <main>
@@ -19,6 +19,9 @@
       {% for link_name in links %}
         <a href="{{ links[link_name] }}" class="text-button">&#x2768;{{ link_name }}&#x2769;</a>
       {% endfor %}
+      <span class="license">
+        {{ license|safe }}
+      </span>
     </div>
   </main>
 </body>

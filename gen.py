@@ -13,54 +13,72 @@ import jinja2
 import jsonmerge
 import yaml
 
+class DictWithLinks(dict):
+    def __init__(self, *arg, **kw):
+        super().__init__(*arg, **kw)
+        self.links = set()
 
-def obj_walk_keys(node, callback, path=".", visited=None):
+    def addLink(self, k, v):
+        self.links.add(k)
+        self[k] = v
+
+    def items(self, noLinks=False):
+        for item in super().items():
+            if not noLinks or item[0] not in self.links:
+                yield item
+
+def obj_walk_keys(node, callback, callback_args=[], visited=None):
     if visited is None:
         visited = set()
     if id(node) in visited:
         return
     else:
         visited.add(id(node))
-    if isinstance(node, dict):
+    if isinstance(node, DictWithLinks):
+        for k, v in list(node.items(noLinks=True)):
+            callback(node, k, v, *callback_args)
+            obj_walk_keys(v, callback, callback_args, visited)
+    elif isinstance(node, dict):
         for k, v in list(node.items()):
-            next_path = path + ".{:}".format(k)
-            callback(node, k, v, next_path)
-            obj_walk_keys(v, callback, next_path, visited)
+            callback(node, k, v, *callback_args)
+            obj_walk_keys(v, callback, callback_args, visited)
     elif isinstance(node, list):
         for idx, elem in enumerate(node):
-            obj_walk_keys(elem, callback, path + "[{:}]".format(idx), visited)
+            obj_walk_keys(elem, callback, callback_args, visited)
 
 
 def evaluate_inline_templates(obj):
     deepest_level = 0
-    def find_max_level(node, k, v, path):
+    def find_max_level(node, k, v):
         nonlocal deepest_level
         deepest_level = max(deepest_level, k.count("?"))
     obj_walk_keys(obj, find_max_level)
+
+    def scrape_patterns(node, k, v, patterns, suffix_re):
+        if suffix_re.match(k) and isinstance(v, str):
+            patterns[id(node[k])] = v
+
+    def replace_patterns(node, k, v, template_vars, patterns, pattern_env, suffix):
+        if id(node[k]) in patterns:
+            evaluated_k = k[:-len(suffix)]
+            if evaluated_k not in node:
+                node[evaluated_k] = pattern_env.get_template(id(node[k])).render(**template_vars)
+            del node[k]
 
     for level in range(1,deepest_level+1):
         patterns = {}
 
         suffix = "?" * level
         suffix_re = re.compile(r"^[^?]*\?{"+str(level)+r"}$")
-        def scrape_patterns(node, k, v, path):
-            if suffix_re.match(k) and isinstance(v, str):
-                patterns[path] = v
-        obj_walk_keys(obj, scrape_patterns)
+        obj_walk_keys(obj, scrape_patterns, (patterns, suffix_re))
 
         pattern_env = jinja2.Environment(
             loader=jinja2.DictLoader(patterns)
         )
 
-        def replace_patterns(node, k, v, path):        
-            if path in patterns:
-                evaluated_k = k[:-len(suffix)]
-                del node[k]
-                if evaluated_k not in node:
-                    node[evaluated_k] = pattern_env.get_template(path).render(**node)
-                else:
-                    pass
-        obj_walk_keys(obj, replace_patterns)
+        for page_vars in obj:
+            obj_walk_keys(page_vars, replace_patterns, (page_vars, patterns, pattern_env, suffix))
+
 
 
 def generate(book, templates_dir, skeleton_dir, output_dir, assets_dir):
@@ -73,62 +91,53 @@ def generate(book, templates_dir, skeleton_dir, output_dir, assets_dir):
     if os.path.isdir(assets_dir):
         shutil.copytree(assets_dir, os.path.join(output_dir, "assets"), dirs_exist_ok=True)
 
-    expanded_pages = []
-    for idx in range(len(book["pages"])):
-        if "range" in book["pages"][idx]:
-            range_exp = re.sub("\s", "", book["pages"][idx]["range"])
-            range_exp_tokens = re.match("([^:]+):([0-9]+)..([0-9]+)", range_exp)
-            var_name = range_exp_tokens.group(1)
-            range_start = int(range_exp_tokens.group(2))
-            range_end = int(range_exp_tokens.group(3))
-            for rep_idx in range(range_start, range_end+1):
-                new_page = copy.deepcopy(book["pages"][idx])
-                del new_page["range"]
-                new_page[var_name] = str(rep_idx)
-                expanded_pages.append(new_page)
-        else:
-            expanded_pages.append(book["pages"][idx])
-    book["pages"] = expanded_pages
+    for sequence_name, sequence_pages in book["pages"].items():
+        expanded_pages = []
+        for idx in range(len(sequence_pages)):
+            if "range" in sequence_pages[idx]:
+                range_exp = re.sub("\s", "", sequence_pages[idx]["range"])
+                range_exp_tokens = re.match("([^:]+):([0-9]+)..([0-9]+)", range_exp)
+                var_name = range_exp_tokens.group(1)
+                range_start = int(range_exp_tokens.group(2))
+                range_end = int(range_exp_tokens.group(3))
+                for rep_idx in range(range_start, range_end+1):
+                    new_page = copy.deepcopy(sequence_pages[idx])
+                    del new_page["range"]
+                    new_page[var_name] = str(rep_idx)
+                    expanded_pages.append(new_page)
+            else:
+                expanded_pages.append(sequence_pages[idx])
+        book["pages"][sequence_name] = expanded_pages
+        sequence_pages = expanded_pages
 
-    page_vars = []
-    for idx in range(len(book["pages"])):
-        page_vars.append(copy.deepcopy(book["base"]))
-        page_vars[-1].update(book["pages"][idx])
-        page_vars[-1]["page"] = page_vars[-1]
-        page_vars[-1]["all_pages"] = page_vars
+        for idx, page in enumerate(sequence_pages):
+            new_page = DictWithLinks(copy.deepcopy(book["base"]))
+            new_page.update(page)
+            new_page.addLink("page", new_page)
+            new_page.addLink("sequence_name", sequence_name)
+            new_page.addLink("sequence_pages", sequence_pages)
+            new_page.addLink("sequences", book["pages"])
+            sequence_pages[idx] = new_page
 
-    for idx in range(len(book["pages"])):
-        page_vars[idx]["first"] = page_vars[0]
-        page_vars[idx]["last"] = page_vars[-1]
-        if idx > 0:
-            page_vars[idx]["prev"] = page_vars[idx-1]
-        else:
-            page_vars[idx]["prev"] = None
-        if idx < len(book["pages"])-1:
-            page_vars[idx]["next"] = page_vars[idx+1]
-        else:
-            page_vars[idx]["next"] = None
+        for idx, page in enumerate(sequence_pages):
+            page.addLink("first", sequence_pages[0])
+            page.addLink("last", sequence_pages[-1])
+            if idx > 0:
+                page.addLink("prev", sequence_pages[idx-1])
+            else:
+                page.addLink("prev", None)
+            if idx < len(sequence_pages)-1:
+                page.addLink("next", sequence_pages[idx+1])
+            else:
+                page.addLink("next", None)
 
-    evaluate_inline_templates(page_vars)
+        evaluate_inline_templates(sequence_pages)
 
-    for idx in range(len(book["pages"])):
-        template = env.get_template(page_vars[idx]["template"])
-        rendered = template.render(**page_vars[idx])
-        with open(os.path.join(output_dir, page_vars[idx]["filename"]), "w") as of:
-            of.write(rendered)
-
-    for single_vars in book["singles"]:
-        single_vars_base = copy.deepcopy(book["base"])
-        single_vars_base.update(single_vars)
-        single_vars = single_vars_base
-        single_vars["page"] = single_vars
-        single_vars["all_pages"] = page_vars
-        evaluate_inline_templates(single_vars)
-
-        template = env.get_template(single_vars["template"])
-        rendered = template.render(**single_vars)
-        with open(os.path.join(output_dir, single_vars["filename"]), "w") as of:
-            of.write(rendered)
+        for page in sequence_pages:
+            template = env.get_template(page["template"])
+            rendered = template.render(**page)
+            with open(os.path.join(output_dir, page["filename"]), "w") as of:
+                of.write(rendered)
 
 
 def new_spinner():
