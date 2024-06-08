@@ -62,22 +62,22 @@ main {
   }
 }
 
-
-
-.unicode-button {
-  color: #ccc;
-  text-decoration: none;
-  font-size: 4em;
+.svg-button svg {
+  padding-top: .5em;
+  width: 4em;
 }
-.light .unicode-button {
-  color: #333;
+.svg-button g {
+  fill: #ccc;
+}
+.light .svg-button g {
+  fill: #444;
 }
 
-.unicode-button:hover {
-  color: #fff;
+.svg-button:hover g {
+  fill: #fff;
 }
-.light .unicode-button:hover {
-  color: #000;
+.light .svg-button:hover g {
+  fill: #000;
 }
 
 

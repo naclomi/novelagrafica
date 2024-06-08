@@ -5,25 +5,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=12.0, minimum-scale=.25, user-scalable=yes">
   <title>{{title}} [{{id}}]</title>
   <link rel="stylesheet" href="{{ page['site-root'] }}/css/main.css">
+  <script src="{{ page['site-root'] }}/js/hammer.min.js"></script>
   <script src="{{ page['site-root'] }}/js/main.js"></script>
 </head>
 <body class="{{ page['body-class'] }}">
   <main>
     <div id="page-tray">
-      <img class="page-image {{ 'shadow' if page['page-shadow'] }}" src="{{ page['image-url'] }}">
+      <img draggable="false" ondragstart="return false" class="page-image {{ 'shadow' if page['page-shadow'] }}" src="{{ page['image-url'] }}">
     </div>
 
     <div class="nav-tray">
       {% if prev is not none %}
-      <span><a href="{{ page['site-root'] }}/{{ first['url-slug'] }}" class="unicode-button" title="First page" aria-label="First page">&#x27dd;</a></span>
-      <span><a href="{{ page['site-root'] }}/{{ prev['url-slug'] }}" class="unicode-button" id="prev-link" title="Previous page" aria-label="Previous page">&#x21fd;</a></span>
+      <span><a href="{{ page['site-root'] }}/{{ first['url-slug'] }}" class="svg-button" title="First page" aria-label="First page">
+        <svg viewBox="0 0 18.062981 10.435346" class="svg-icon"><g>
+          <path
+             d="M 1.5805511,4.6419062 H 17.912451 V 5.9836173 H 1.5805511 v 2.563631 H 0.23883698 V 2.0303557 H 1.5805511 Z"
+          />
+        </g></svg>
+      </a></span>
+      <span><a href="{{ page['site-root'] }}/{{ prev['url-slug'] }}" class="svg-button" id="prev-link" title="Previous page" aria-label="Previous page">
+        <svg viewBox="0 0 18.062981 10.435346" class="svg-icon"><g>
+          <path
+             d="M 4.28176,8.142377 V 2.292969 L 1.35706,5.217673 Z M 5.3755081,5.978096 v 4.45725 L 0,5.217673 5.3755081,0 V 4.457251 H 18.06298 v 1.520845 z"
+          />
+        </g></svg>
+      </a></span>
       {% else %}
       <span style="width: 8em"></span>
       {% endif %}
       <span id="page-number">{{ id }}</span>
       {% if next is not none %}
-      <span><a href="{{ page['site-root'] }}/{{ next['url-slug'] }}" class="unicode-button" id="next-link" title="Next page" aria-label="Next page">&#x21fe;</a></span>
-      <span><a href="{{ page['site-root'] }}/{{ last['url-slug'] }}" class="unicode-button" title="Last page" aria-label="Last page">&#x27de;</a></span>
+      <span><a href="{{ page['site-root'] }}/{{ next['url-slug'] }}" class="svg-button" id="next-link" title="Next page" aria-label="Next page">
+        <svg viewBox="0 0 18.062981 10.435346" class="svg-icon"><g>
+          <path
+             d="M 13.78122,8.142377 V 2.292969 l 2.9247,2.924704 z M 12.687472,5.978096 v 4.45725 L 18.06298,5.217673 12.687472,0 V 4.457251 H 0 v 1.520845 z"
+          />
+        </g></svg>
+      </a></span>
+      <span><a href="{{ page['site-root'] }}/{{ last['url-slug'] }}" class="svg-button" title="Last page" aria-label="Last page">
+        <svg viewBox="0 0 18.062981 10.435346" class="svg-icon"><g>
+          <path
+            d="M 16.570737,4.6419062 H 0.23883698 V 5.9836173 H 16.570737 v 2.563631 h 1.341714 V 2.0303557 h -1.341714 z"
+          />
+        </g></svg>
+      </a></span>
       {% else %}
       <span style="width: 8em"></span>
       {% endif %}
